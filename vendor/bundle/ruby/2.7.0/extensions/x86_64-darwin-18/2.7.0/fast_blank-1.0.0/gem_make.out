@@ -1,0 +1,15 @@
+current directory: /Users/kjvenky/Pinblu/slate/vendor/bundle/ruby/2.7.0/gems/fast_blank-1.0.0/ext/fast_blank
+/usr/local/opt/ruby/bin/ruby -I /usr/local/Cellar/ruby/2.7.1_2/lib/ruby/2.7.0 -r ./siteconf20200829-74533-1fcwpos.rb extconf.rb
+creating Makefile
+
+current directory: /Users/kjvenky/Pinblu/slate/vendor/bundle/ruby/2.7.0/gems/fast_blank-1.0.0/ext/fast_blank
+make "DESTDIR=" clean
+
+current directory: /Users/kjvenky/Pinblu/slate/vendor/bundle/ruby/2.7.0/gems/fast_blank-1.0.0/ext/fast_blank
+make "DESTDIR="
+compiling fast_blank.c
+linking shared-object fast_blank.bundle
+
+current directory: /Users/kjvenky/Pinblu/slate/vendor/bundle/ruby/2.7.0/gems/fast_blank-1.0.0/ext/fast_blank
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 fast_blank.bundle ./.gem.20200829-74533-135w8mo

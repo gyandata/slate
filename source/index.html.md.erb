@@ -1,0 +1,566 @@
+---
+title: PinBlu Protocol
+
+language_tabs: # must be one of https://git.io/vQNgJ
+  - shell
+  - ruby
+  - python
+  - javascript
+
+toc_footers:
+  - <a href='#'>Sign Up for a Developer Key</a>
+  - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
+
+includes:
+  - errors
+
+search: true
+
+code_clipboard: true
+---
+
+# Introduction
+
+Welcome to the PinBlu API! You can use our API to access PinBlu API endpoints, which can get information on drivers locations, send them orders, keep track of the orders and pay the drivers. Pinblu provides a flexible API format which can be used by any firm to push their orders to the drivers.
+
+We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+
+# Why Pinblu?
+
+Pinblu aims to address the current inefficiencies in the last mile delivery ecosystem with architecture which will allow the drivers and firms to directly communicate on a common platform without effecting the current technology stack built by the firms.
+
+## Goals
+- Reduce the driver acquisition and access costs the firms
+- Allow firms with any order size to participate
+- Reduce the Deadhours for the Drivers
+
+## Team
+We are a team of product managers, data scientists, software engineers and designers who have graduated from IITM with experience in logistics and building large-scale technical infrastructure.
+
+# Registry
+
+Pinblu registry is the document hosted and maintained by Pinblu which contains the list of firms that the Pinblu client will work with. Firm should contact Pinblu for registration. 
+
+# Client
+
+Pinblu client is a React Native based application that works in Android (iOS is Work In Progress). Pinblu client connects to the list of the firms that are provided by the Pinblu registry and communicates directly with firm servers via the firms preferred protocol. 
+
+Pinblu client with establish secure communication with the firms during the app loading and acquire necessary tokens for furthur communication.
+
+# Firm Parameters Reference
+
+Every firm interested in using the PinBlu network should host a public document that will provide pinblu client with required details to communicate with the firms servers. These parameters ensure that any change on server side implementation can be completely handled by the firm without contacting PinBlu.
+
+### Firm Parameters
+
+Parameter | Default | Description
+--------- | ------- | -----------
+Version  | v1.0.0 | Version of the api being implemented by the firm.
+Protocol | HTTPS | The communication protocol with the client.
+Location | 5(in sec) | Frequency at which firms want to receive driver location data.
+PublicKey |       | Useful to ensure secure communications with the firms
+
+# Authentication
+
+## Driver Authentication
+
+App will authenticate the Driver via standard OTP based authentication.
+
+## Authentication with the firm
+
+PinBlu uses API keys to allow access to the Client. You can register a new PinBlu API key at our [developer portal](http://example.com/developers). Firms should include the API key in the response to authentication to ensure secure communication.
+
+PinBlu uses JWT based tokens to ensure secure calls to the firms. All the API calls made to firm will carry the JWT token provided by the firm for the Authentication and Authorization purpose.
+
+WIP
+
+## Security
+
+WIP
+
+# Onboard(KYC)
+
+## Get Driver KYC
+
+This API allow the firms to the receive the drivers KYC.
+
+### Description
+
+Firm should host the API. Firm will receive a URL from which they can download the necessary documents for the KYC. URL will be active for 30min from the time of generation. If firm is not able to process it, they can request it again from the driver by sending a notifiction to the Pinblu client. Check Notifications for details.
+
+### Documents Collected
+
+All the documents are collected in the JPEG format and preverified for the image clarity.
+
+- Drivers Pan Card
+- Aadhaar Card
+- Driving License
+- Bike RC
+- Pictures of the Bike
+- Bank Passbook
+
+### HTTP PUT Request
+
+`PUT http://<FIRM_HOST_URL>/driver/kyc`
+
+### Parameters
+
+Parameter | Default | Description
+--------- | ------- | -----------
+Url  |  | [AWS Presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html)
+
+
+```json
+  {
+    "type": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "url" : <<URL>>
+    }
+  }
+```
+
+<%= image_tag "images/onboard.png" %>
+(Open Image in new tab for enlarged view)
+
+# Firm Details
+
+## Firm Metadata
+
+This API allow the firms to publish their meta data to all the drivers.
+
+### Description
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/firm/details`
+
+```json
+  {
+    "data": {
+      "type": "object",
+      "properties" : {
+            "type": "object",
+            "logo": { 
+                "type": "string",
+                "url": "https://google.com"
+            },
+            "name": "Bigbasket",
+            "privacy-url": "",
+            "tnc-url": "",
+            "support": "+91 99999 99999"
+      }
+    }
+  }
+```
+
+# Rate Card
+
+## Publish Rates
+
+This API allow the firms to publish their rate card to all the drivers.
+
+### Description
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/firm/ratecard`
+
+```json
+  {
+    "type": {
+      "type": "string",
+      "enum": ["gps"]
+    },
+    "data": {
+      "type": "object",
+      "properties" : {
+            "type": "object",
+            "method": { 
+                "type": "string",
+                "enum": ["UPI","BANK"]
+            },
+            "frequency": {
+                "type": "string",
+                "enum": ["DAILY","WEEKLY","BIWEEKLY","MONTHLY"]  
+            },
+            "timeslots": {
+                "type": "string",
+            }
+      }
+    }
+  }
+```
+
+# Driver Identity
+
+Every driver will be uniquely identified by the phonenumber provided as part the JWT token. Firm can later use the JWT token to retreive the driver Identity from the token.
+
+# Driver Location
+
+## Get Driver Location
+
+This API allow the firms to the receive the drivers location at requested frequency. Currently, All firms will receive at a standard frequency of 5seconds. 
+
+### Description
+
+Firm will receive the driver location in json format as specified below. Once the firm receives the location data, they can include the driver in the their analysis. Firms wil receive the driver location data only when the driver is free or if he is delivering the concerned firms order.
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/driver/location`
+
+```json
+  {
+    "type": {
+      "type": "string",
+      "enum": ["gps"]
+    },
+    "gps": {
+      "type": "object",
+      "properties" : {
+          "lat" : {
+              "type" : "string"
+          },
+          "lon" : {
+              "type" : "string"
+          }
+      },
+      "required" : ["lat", "lon"]
+    }
+  }
+```
+
+# Driver Status
+
+## Get Driver Status 
+
+This API allow the firms to the receive the status of the drivers whenever its updated. 
+
+### Description
+
+Firm will receive the driver status in json format as specified below. Everytime driver accepts a order, all the other firms other than concerned firm will receive status of the driver
+
+### HTTP PUT Request
+
+`PUT http://<FIRM_HOST_URL>/driver/status`
+
+```json
+  {
+    "type": {
+      "type": "string",
+      "enum": ["BUSY","FREE","IDLE"]
+    },
+    "data": {
+      "type": "string",
+      "status": "BUSY"
+    }
+  }
+```
+
+
+# Live Order
+
+## Send Order
+
+Send the partial order details to the driver, only the information required for the driver to accept the order. Firm sends a data notification to the driver app.  
+
+## Order Details
+
+Send the full order details to the driver.
+
+### HTTP PUT Request
+
+`GET http://<FIRM_HOST_URL>/order/:orderId`
+
+```json
+  {
+    "type": "object",
+    "data": {
+      "type": "string",
+      "status": "BUSY"
+    }
+  }
+```
+
+## Order Accept
+
+API to accept the order.
+
+`PUT http://<FIRM_HOST_URL>/order/status`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+### Data
+
+Parameter | Default | Description
+--------- | ------- | -----------
+Url  |  | [AWS Presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html)
+
+## Update Order Status
+
+API to update the order status.
+
+`PUT http://<FIRM_HOST_URL>/order/status`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+### Data
+
+Parameter | Default | Description
+--------- | ------- | -----------
+orderId  |  | Unique Order ID provided by the firm
+status  |  | "ACCEPTED"
+
+```json
+  {
+    "type": "object",
+    "enum": ["REACHED_PICKUP_LOCATION","PICKED_UP","DELIVERED"],
+    "properties": {
+      "status": "ORDER_STATUS_SELECTED",
+      "orderId": "5b3825d6-822b-4f3c-bae2-237e6a5611c5"
+    }
+  }
+```
+
+## Verify OTP
+
+API to verify the order picking up the order.
+
+`POST http://<FIRM_HOST_URL>/order/verify`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+### Data
+
+Parameter | Default | Description
+--------- | ------- | -----------
+orderId  |  | Order ID for the OTP is sent. OTP will be provided at the pickup point.
+otp  |  |  4 digit OTP value
+
+```json
+  {
+    "type": "object",
+    "properties": {
+      "otp": {
+        "type": "string",
+        "value": "1234"  
+      },
+      "orderId": {
+        "type": "string",
+        "value": "5b3825d6-822b-4f3c-bae2-237e6a5611c5"
+      },
+    }
+  }
+```
+
+# Order History
+
+## Get Driver Order History
+
+This API allow the firms to the s the drivers location at requested frequency. 
+
+### Description
+
+Firm will receive the driver location in json format as specified below. Once the firm receives the location data, they can include the driver in the their analysis. Firms wil receive the driver location data only when the driver is free or if he is delivering the concerned firms order.
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/driver/location`
+
+```json
+  {
+    "type": "object",
+    "properties" : {
+        "type": "object",
+        "list": [{
+          "orderId": "",
+          "from": {
+            "gps": {
+              "type": "object",
+              "properties" : {
+                  "lat" : {
+                      "type" : "string"
+                  },
+                  "lon" : {
+                      "type" : "string"
+                  }
+              }
+            }
+          },
+          "to": {
+            "gps": {
+              "type": "object",
+              "properties" : {
+                  "lat" : {
+                      "type" : "string"
+                  },
+                  "lon" : {
+                      "type" : "string"
+                  }
+              }
+            }
+          },
+          "customer": {
+            "type": "object"
+          },
+          "amount": {},
+          "orderStatus": ""
+        }]
+     }
+  }
+```
+
+# Payments
+
+## Request Payout
+
+This API allow the drivers to request for the payout from the respective firm
+
+### Description
+
+Driver can send a payout request to the firm. Firms has to acknowledge receiving the request.
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/payout/request`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+```json
+  {
+    "type": "number",
+    "value": "1234"
+  }
+```
+
+## Payout Status
+
+This API allow the drivers to check the status of the payout from the respective firm
+
+### Description
+
+### HTTP PUT Request
+
+`POST http://<FIRM_HOST_URL>/payout/status`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+```json
+  {
+    "type": "number",
+    "payoutId": "35483c7b-47d7-449f-817b-dc4198d816ef"
+  }
+```
+
+## Payouts History
+
+API for the firm to provide a list of the payouts
+
+### Description
+Firm should provide a list of the payment request for the driver, along with its status. List has to be ordered with earliest data first.
+
+### HTTP PUT Request
+
+`GET http://<FIRM_HOST_URL>/payout/list`
+
+### Headers
+
+Parameter |  Description
+--------- | -----------
+Authorization  |   JWT << FIRM_TOKEN >>
+ContentType | application/json
+
+
+# Notifications
+
+# Chat Support
+
+WIP
+
+# Data Privacy
+
+WIP
+
+# Fraud Management
+
+WIP
+
+# Contact Us
+
+Please write to hasini@pinblu.in for any queries or early access to the
+
+```ruby
+require 'PinBlu'
+
+api = PinBlu::APIClient.authorize!('meowmeowmeow')
+api.kittens.get
+```
+
+```python
+import PinBlu
+
+api = PinBlu.authorize('meowmeowmeow')
+api.kittens.get()
+```
+
+```shell
+curl "http://example.com/api/kittens"
+  -H "Authorization: meowmeowmeow"
+```
+
+```javascript
+const PinBlu = require('PinBlu');
+
+let api = PinBlu.authorize('meowmeowmeow');
+let kittens = api.kittens.get();
+```
+
+> The above command returns JSON structured like this:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Fluffums",
+    "breed": "calico",
+    "fluffiness": 6,
+    "cuteness": 7
+  },
+  {
+    "id": 2,
+    "name": "Max",
+    "breed": "unknown",
+    "fluffiness": 5,
+    "cuteness": 10
+  }
+]
+```
+
